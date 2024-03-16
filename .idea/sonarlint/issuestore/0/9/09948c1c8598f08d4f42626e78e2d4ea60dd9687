@@ -1,0 +1,22 @@
+
+X	java:S125"<This block of commented-out lines of code should be removed.(¹Ï¯À8´ğš¿ä1
+]	java:S125!"<This block of commented-out lines of code should be removed.(½Ô˜’ıÿÿÿÿ8ÃŸ¿ä1
+N
+java:S1128"1Remove this unused import 'org.w3c.dom.Document'.(Á§²“8ÃŸ¿ä1
+J
+java:S1128	"(Remove this unused import 'javax.swing'.(Ìí¿Üüÿÿÿÿ8Ğğš¿ä1
+`
+java:S1128
+">Remove this unused import 'javax.xml.parsers.DocumentBuilder'.(ƒ”¯¹ùÿÿÿÿ8ÄŸ¿ä1
+g
+java:S1128"ERemove this unused import 'javax.xml.parsers.DocumentBuilderFactory'.(»·±Ñüÿÿÿÿ8ÅŸ¿ä1
+Y
+java:S1128"<Remove this unused import 'javax.xml.transform.Transformer'.(ˆ¬í¿8ÅŸ¿ä1
+`
+java:S1128"CRemove this unused import 'javax.xml.transform.TransformerFactory'.(ğ™“Ø8ÅŸ¿ä1
+`
+java:S1128">Remove this unused import 'javax.xml.transform.dom.DOMSource'.(¾Ñ¶âùÿÿÿÿ8ÆŸ¿ä1
+a
+java:S1128"DRemove this unused import 'javax.xml.transform.stream.StreamResult'.(Æ‹ëÿ8ÆŸ¿ä1
+F
+java:S1128")Remove this unused import 'java.io.File'.(†Ğ¥Å8ÆŸ¿ä1
