@@ -32,6 +32,8 @@ public class ModifyXmlAction extends AnAction {
     private static final String FILE_NAME = "Jade.xml";
     private static final String RESOURCES_PATH = "src/main/resources/";
 
+    private String currentEnv = "No selected env";
+
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         // Affiche la boîte de dialogue avec la liste déroulante
@@ -55,6 +57,16 @@ public class ModifyXmlAction extends AnAction {
 
         // Appeler la méthode de modification XML avec l'option sélectionnée
         modifyXml(file, configXml);
+
+        //Modifier le contenu du hover sur icon
+        currentEnv = "Current env : " + selected;
+    }
+
+    @Override
+    public void update(@NotNull AnActionEvent e) {
+        super.update(e);
+        //Ajuste le texte en fonction de l'environnement sélectionné
+            e.getPresentation().setText(currentEnv);
     }
 
     private String loadConfigFromSelectedItem(String selected) throws IOException {

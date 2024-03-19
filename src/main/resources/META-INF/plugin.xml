@@ -29,9 +29,9 @@
     </extensions>
 
     <actions>
-        <action id="ModifyXmlAction" class="com.example.pluginjade.ModifyXmlAction" text="Modify Jade.xml" description="Modifies Jade.xml based on selection">
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
-            <add-to-group group-id="ToolsMenu" anchor="first"/>
+        <action id="ModifyXmlAction" class="com.example.pluginjade.ModifyXmlAction"
+                text="Modify Jade.xml" description="Modifies Jade.xml based on selection" icon="META-INF/globazIcon.png">
+            <add-to-group group-id="ToolbarRunGroup" anchor="first" />
         </action>
     </actions>
 
