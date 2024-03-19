@@ -4,14 +4,13 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.ComboBox;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-
-import com.intellij.openapi.ui.ComboBox;
 
 import javax.swing.*;
 import javax.xml.parsers.DocumentBuilder;
@@ -26,52 +25,70 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class ModifyXmlAction extends AnAction {
 
     private static final String FILE_NAME = "Jade.xml";
     private static final String RESOURCES_PATH = "src/main/resources/";
+    private static final String POPUP_DIALOG_TITLE = "Sélectionnez un environnement";
+    private static final String XML_FILE_EXTENSION = ".xml";
+    private static final String PATH_TO_CONFIG_FILES = "/JadeConfigsXML/";
 
-    private String currentEnv = "No selected env";
+    private String pluginHoverText = "No selected env, see Jade.xml";
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
-        // Affiche la boîte de dialogue avec la liste déroulante
-        //TODO VFE construire le tableau de string avec le nom des fichiers xml dans les ressources
-        ComboBox<String> comboBox = new ComboBox<>(new String[]{"DEV1", "DEV2", "DEV3"});
-        JOptionPane.showMessageDialog(null, comboBox, "Select Modification", JOptionPane.QUESTION_MESSAGE);
-        String selected = (String) comboBox.getSelectedItem();
-
-        String configXml = null;
-        try {
-            configXml = loadConfigFromSelectedItem(selected);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-
-
-        //Récupération du file Jade.xml
         Project project = e.getProject();
-        //TODO VFE implémenter exception
-        VirtualFile file = findFileInProject(project, FILE_NAME);
 
-        // Appeler la méthode de modification XML avec l'option sélectionnée
-        modifyXml(file, configXml);
+        // Affiche la boîte de dialogue avec la liste déroulante
+        ComboBox<String> comboBox = new ComboBox<>(fetchConfigFilesNames());
+        int optionPaneChoice = JOptionPane.showConfirmDialog(null, comboBox, POPUP_DIALOG_TITLE, JOptionPane.DEFAULT_OPTION);
+        String selectedItem = (String) comboBox.getSelectedItem();
 
-        //Modifier le contenu du hover sur icon
-        currentEnv = "Current env : " + selected;
+        //Exécute le process principal du plugin seulement si on a validé la popup
+        if (optionPaneChoice == JOptionPane.OK_OPTION) {
+            String newConfigJadeXml = null;
+            try {
+                newConfigJadeXml = loadJadeConfigFromSelectedItem(selectedItem);
+            } catch (IOException ex) {
+                Messages.showErrorDialog(project, "La configuration pour l'environnement \"" + selectedItem + "\" n'a pas été trouvée", "Configuration Introuvable");
+            }
+
+
+            //Récupération du fichier Jade.xml dans le projet WebAVS
+            VirtualFile jadeFileXml = findFileInProject(project, FILE_NAME);
+
+            // Appeler la méthode de modification XML avec l'option sélectionnée
+            if (jadeFileXml != null && newConfigJadeXml != null) {
+                modifyXml(jadeFileXml, newConfigJadeXml);
+            }
+
+            //Modifier le contenu du hover sur icon
+            pluginHoverText = "Current env : " + selectedItem;
+        }
     }
 
     @Override
     public void update(@NotNull AnActionEvent e) {
         super.update(e);
-        //Ajuste le texte en fonction de l'environnement sélectionné
-            e.getPresentation().setText(currentEnv);
+        //Ajuste le texte hover du plugin en fonction de l'environnement sélectionné
+        e.getPresentation().setText(pluginHoverText);
     }
 
-    private String loadConfigFromSelectedItem(String selected) throws IOException {
+    /**
+     * Récupère tous les noms des environnements pour matcher avec les fichiers xml de configuration
+     * @return Tableau de String avec le contenu de l'Enum
+     */
+    private String[] fetchConfigFilesNames(){
+        return Arrays.stream(EnvironnementsJade.values())
+                .map(Enum::name)
+                .toArray(String[]::new);
+    }
+
+    private String loadJadeConfigFromSelectedItem(String selected) throws IOException {
         // Construire le chemin vers le fichier de configuration basé sur l'option sélectionnée
-        String configFilePath = "/JadeConfigsXML/" + selected + ".xml";
+        String configFilePath = PATH_TO_CONFIG_FILES + selected + XML_FILE_EXTENSION;
         // Lire le contenu du fichier de configuration
         InputStream configInputStream = getClass().getResourceAsStream(configFilePath);
         if (configInputStream == null) {
@@ -82,11 +99,16 @@ public class ModifyXmlAction extends AnAction {
         return new String(configContentBytes, StandardCharsets.UTF_8);
     }
 
+    @Deprecated
     private VirtualFile findFileInProject(Project project, String fileName) {
-        // Implémentation pour trouver le fichier dans le projet
-        // Cette fonction est un exemple et doit être adaptée à vos besoins
-        VirtualFile root = project.getBaseDir();
-        return root.findFileByRelativePath(RESOURCES_PATH + fileName);
+        // Récupération du fichier Jade.xml dans le projet
+        VirtualFile file = project.getBaseDir().findFileByRelativePath(RESOURCES_PATH + fileName);
+        if(file != null){
+           return file;
+        } else {
+            Messages.showErrorDialog(project, "Le fichier " + FILE_NAME + " n'a pas été trouvé dans " + RESOURCES_PATH, "Fichier Non Trouvé");
+            return null;
+        }
     }
 
     private void modifyXmlToAppendContent(VirtualFile file, String option) {
@@ -137,17 +159,22 @@ public class ModifyXmlAction extends AnAction {
     }
 
 
-    private void modifyXml(VirtualFile file, String newContentXml) {
+    /**
+     * Méthode qui remplace le contenu du fichier Jade.xml par le nouveau contenu
+     * @param jadeFileXml
+     * @param newConfigJadeXml
+     */
+    private void modifyXml(VirtualFile jadeFileXml, String newConfigJadeXml) {
         ApplicationManager.getApplication().runWriteAction(() -> {
             try {
                 // Convertit le contenu XML en tableau d'octets
-                byte[] contentBytes = newContentXml.getBytes(StandardCharsets.UTF_8);
+                byte[] contentBytes = newConfigJadeXml.getBytes(StandardCharsets.UTF_8);
 
                 // Remplace directement le contenu existant par le nouveau contenu XML
-                file.setBinaryContent(contentBytes);
+                jadeFileXml.setBinaryContent(contentBytes);
 
                 // Rafraîchit le fichier pour refléter les modifications dans l'IDE
-                VfsUtil.markDirtyAndRefresh(true, true, true, file);
+                VfsUtil.markDirtyAndRefresh(true, true, true, jadeFileXml);
             } catch (Exception e) {
                 e.printStackTrace();
             }

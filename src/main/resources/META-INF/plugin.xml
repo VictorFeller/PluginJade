@@ -30,7 +30,7 @@
 
     <actions>
         <action id="ModifyXmlAction" class="com.example.pluginjade.ModifyXmlAction"
-                text="Modify Jade.xml" description="Modifies Jade.xml based on selection" icon="META-INF/globazIcon.png">
+                text="Modifier Jade.xml" description="Modifie le contenu du fichier Jade.xml basé sur la sélection" icon="META-INF/globazIcon.png">
             <add-to-group group-id="ToolbarRunGroup" anchor="first" />
         </action>
     </actions>
